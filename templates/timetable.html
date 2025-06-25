@@ -3,32 +3,76 @@
 {% load static %}
 {% load index %}
 
+<div class="container">
+  <div class="row mb-4">
+    <div class="col-12">
+      <a href="{% url 'download_timetable_pdf' %}" class="btn btn-primary btn-lg">
+        <i class="fa fa-download"></i> Download Timetable as PDF
+      </a>
+    </div>
+  </div>
 
-<div>
   {% for section in sections %}
-  <h2 class="secHead">{{ section.section_id }} ({{ section.department }})</h2>
-  <table class="timetable">
-    <thead>
-      <tr>
-        <th>Class #</th>
-        {% for time in timeSlots %}
-        <th>{{time.0}}</th>
-        {% endfor %}
-      </tr>
-    </thead>
+  <div class="section-container">
+    <h2 class="secHead">{{ section.section_id }} ({{ section.department }})</h2>
+    <div class="table-responsive">
+      <table class="timetable">
+        <thead>
+          <tr>
+            <th>Class #</th>
+            {% for time in timeSlots %}
+            <th>{{time.0}}</th>
+            {% endfor %}
+          </tr>
+        </thead>
 
-    <tbody>
-      {% for week in weekDays %}
-      <tr>
-        <th>{{week.0}}</th>
-        {% for time in timeSlots %}
-        <td>{% sub schedule section.section_id week.0 time.0 %}</td>
-        {% endfor %}
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+        <tbody>
+          {% for week in weekDays %}
+          <tr>
+            <th>{{week.0}}</th>
+            {% for time in timeSlots %}
+            <td>{% sub schedule section.section_id week.0 time.0 %}</td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
   {% endfor %}
 </div>
 
+<style>
+.section-container {
+  margin-bottom: 3rem;
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.btn-primary {
+  background-color: var(--green7);
+  border-color: var(--green7);
+  padding: 0.75rem 1.5rem;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  background-color: var(--green6);
+  border-color: var(--green6);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.btn-primary i {
+  margin-right: 0.5rem;
+}
+</style>
 {% endblock %}

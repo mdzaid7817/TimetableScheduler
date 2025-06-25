@@ -6,11 +6,13 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Quick-start development settings - unsuitable for production
 
 # SECURITY WARNING: keep the secret key used in production secret!
-with open('./secret_key.txt') as f:
-    SECRET_KEY = f.read().strip()
+#with open('./secret_key.txt') as f:
+#   SECRET_KEY = f.read().strip()
+SECRET_KEY = "django-insecure-h71wrzp^0i2r4vl)bwvw=dq@epwgbnkvcx5-2a=@lg5kqe3)9+"
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '*']
 

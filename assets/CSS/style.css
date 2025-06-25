@@ -338,6 +338,16 @@ button {
 
 .loaderClass {
   display: none;
+  position: relative;
+}
+
+.loaderClassValue {
+  position: absolute;
+  font-size: 1.3rem;
+  z-index: 5;
+  line-height: 40px;
+  width: 40px;
+  text-align: center;
 }
 
 .loader {
@@ -365,6 +375,12 @@ button {
 @keyframes rotate {
   0% {transform: rotate(0deg); }
   100% {transform: rotate(360deg); }
+}
+
+.terminateGens {
+  position: absolute;
+  left: 70px;
+  top: -1rem;
 }
 
 

@@ -10,11 +10,10 @@ def dictKey(d, k):
 
 @register.simple_tag
 def sub(s, d, w, t):
-    '''Returns the subject-teacher for a department, weekday and time period'''
+    '''Returns the subject-teacher-room for a department, weekday and time period'''
     for c in s:
         if c.department.dept_name == d and c.meeting_time.day == w and c.meeting_time.time == t:
-            return f'{c.course.course_name} ({c.instructor.name})'
-
+            return f'{c.course.course_name} ({c.instructor.name}, {c.room.r_number})'
     return ''
 
 @register.tag

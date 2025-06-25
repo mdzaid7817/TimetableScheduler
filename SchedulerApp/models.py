@@ -3,7 +3,6 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth.models import AbstractUser
 from django.db.models.signals import post_save, post_delete
 
-
 TIME_SLOTS = (
     ('8:45 - 9:45'  , '8:45 - 9:45'),
     ('10:00 - 11:00', '10:00 - 11:00'),
@@ -11,6 +10,13 @@ TIME_SLOTS = (
     ('1:00 - 2:00'  , '1:00 - 2:00'),
     ('2:15 - 3:15'  , '2:15 - 3:15'),
 )
+'''TIME_SLOTS = (
+    ('8:00 - 8:55'  , '8:55 - 9:50'),
+    ('10:10 - 11:05', '11:05 - 12:00'),
+    ('12:00 - 12:55', '12:55 - 1:50'),
+    ('2:10 - 3:05'  , '3:05 - 4:00'),
+    ('4:00 - 4:55'  , '4:55 - 5:50'),
+)'''
 
 # TIME_SLOTS = (
 #     ('9:30 - 10:30', '9:30 - 10:30'),

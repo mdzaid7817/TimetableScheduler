@@ -6,8 +6,13 @@ from .models import *
 from .forms import *
 from collections import defaultdict
 import random
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+from io import BytesIO
+from reportlab.lib.units import inch
 
-POPULATION_SIZE = 30
+POPULATION_SIZE = 15
 NUMB_OF_ELITE_SCHEDULES = 2
 TOURNAMENT_SELECTION_SIZE = 8
 MUTATION_RATE = 0.05
@@ -154,8 +159,6 @@ class Schedule:
             if classes[i].room.seating_capacity < int(classes[i].course.max_numb_students):
                 self._numberOfConflicts += 1
 
-            # print(classes[i].course.course_name, classes[i].meeting_time, classes[i].section, classes[i].room, classes[i].instructor)
-
             for j in range(i + 1, len(classes)):
                 # Same course on same day
                 if (classes[i].course.course_name == classes[j].course.course_name and \
@@ -171,6 +174,11 @@ class Schedule:
                 # Duplicate time in a department
                 if (classes[i].section == classes[j].section and \
                     classes[i].meeting_time == classes[j].meeting_time):
+                    self._numberOfConflicts += 1
+
+                # Room conflict - same room at same time
+                if (classes[i].meeting_time == classes[j].meeting_time and \
+                    classes[i].room == classes[j].room):
                     self._numberOfConflicts += 1
 
         return 1 / (self._numberOfConflicts + 1)
@@ -267,7 +275,7 @@ def timetable(request):
     geneticAlgorithm = GeneticAlgorithm()
     schedule = population.getSchedules()[0]
 
-    while (schedule.getFitness() != 1.0) and (VARS['generationNum'] < 100):
+    while (schedule.getFitness() != 1.0) and (VARS['generationNum'] < 50):
         if VARS['terminateGens']:
             return HttpResponse('')
 
@@ -279,6 +287,23 @@ def timetable(request):
         # for c in schedule.getClasses():
         #     print(c.course.course_name, c.meeting_time)
         print(f'\n> Generation #{VARS["generationNum"]}, Fitness: {schedule.getFitness()}')
+
+    # Serialize schedule for session storage
+    def serialize_class(c):
+        return {
+            'section_id': c.section,
+            'department': c.department.dept_name,
+            'course_name': c.course.course_name,
+            'course_number': c.course.course_number,
+            'max_numb_students': c.course.max_numb_students,
+            'room_number': c.room.r_number,
+            'room_capacity': c.room.seating_capacity,
+            'instructor_name': c.instructor.name,
+            'instructor_uid': c.instructor.uid,
+            'meeting_day': c.meeting_time.day,
+            'meeting_time': c.meeting_time.time,
+        }
+    request.session['latest_schedule'] = [serialize_class(c) for c in schedule.getClasses()]
 
     return render(
         request, 'timetable.html', {
@@ -479,3 +504,86 @@ def error_404(request, exception):
 
 def error_500(request, *args, **argv):
     return render(request,'errors/500.html', {})
+
+def download_timetable_pdf(request):
+    from reportlab.platypus import Paragraph, Spacer
+    from reportlab.lib.styles import getSampleStyleSheet
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter, leftMargin=0.5*inch, rightMargin=0.5*inch)
+    elements = []
+    styles = getSampleStyleSheet()
+    elements.append(Paragraph("Generated Timetable", styles['Title']))
+    elements.append(Spacer(1, 12))
+
+    # Get the latest schedule from the session
+    schedule = request.session.get('latest_schedule', None)
+    if not schedule:
+        elements.append(Paragraph("No timetable found. Please generate a timetable first.", styles['Normal']))
+        doc.build(elements)
+        buffer.seek(0)
+        response = HttpResponse(buffer, content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="timetable.pdf"'
+        return response
+
+    from SchedulerApp.models import TIME_SLOTS, DAYS_OF_WEEK
+    time_slots = [slot[0] for slot in TIME_SLOTS]
+    week_days = [day[0] for day in DAYS_OF_WEEK]
+
+    # Group schedule by section
+    sections = {}
+    for c in schedule:
+        sec = c['section_id']
+        dept = c['department']
+        if sec not in sections:
+            sections[sec] = {'department': dept, 'classes': []}
+        sections[sec]['classes'].append(c)
+
+    page_width = letter[0] - doc.leftMargin - doc.rightMargin
+    n_cols = 1 + len(week_days)  # 1 for 'Time' + days
+    col_width = page_width / n_cols
+    col_widths = [col_width] * n_cols
+
+    for sec, sec_data in sections.items():
+        # Section heading
+        elements.append(Paragraph(f"Section: {sec} ({sec_data['department']})", styles['Heading2']))
+        # Table header
+        header = ['Time'] + week_days
+        data = [header]
+        # Table rows
+        for time in time_slots:
+            row = [time]
+            for day in week_days:
+                cell = ''
+                for c in sec_data['classes']:
+                    if c['meeting_day'] == day and c['meeting_time'] == time:
+                        cell = f"{c['course_name']}\n({c['instructor_name']})\nRoom: {c['room_number']}"
+                        break
+                row.append(cell)
+            data.append(row)
+        table = Table(data, colWidths=col_widths)
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 11),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.whitesmoke),
+            ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (-1, -1), 10),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 4),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 4),
+            ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ]))
+        elements.append(table)
+        elements.append(Spacer(1, 24))
+
+    doc.build(elements)
+    buffer.seek(0)
+    response = HttpResponse(buffer, content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="timetable.pdf"'
+    return response

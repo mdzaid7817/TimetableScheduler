@@ -30,5 +30,6 @@ urlpatterns = [
     path('sectionDelete/<str:pk>/', sectionDelete, name='deletesection'),
 
     path('api/genNum/', apiGenNum, name='apiGenNum'),
-    path('api/terminateGens/', apiterminateGens, name='apiterminateGens')
+    path('api/terminateGens/', apiterminateGens, name='apiterminateGens'),
+    path('download-timetable-pdf/', download_timetable_pdf, name='download_timetable_pdf'),
 ]

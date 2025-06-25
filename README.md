@@ -7,10 +7,39 @@
  2. Django 2.0 or above
 
 #### Run on your local machine by:
-* `git clone https://github.com/PROxZIMA/TimetableScheduler.git/`
-* `cd TimetableScheduler`
-* `python manage.py runserver`
-* then go to port `http://127.0.0.1:8000/` to run the local server
+1. **Clone the repo** or download the ZIP:
+    ```bash
+    git clone https://github.com/mdzaid7817/TimetableScheduler.git
+    cd TimetableScheduler
+    ```
+
+2. **Set up a virtual environment (recommended):**
+    ```bash
+    python -m venv venv
+    venv\Scripts\activate  # On Windows
+    source venv/bin/activate  # On macOS/Linux
+    ```
+
+3. **Install dependencies:**
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+4. **Apply migrations:**
+    ```bash
+    python manage.py makemigrations
+    python manage.py migrate
+    ```
+
+5. **Run the server:**
+    ```bash
+    python manage.py runserver
+    ```
+
+6. Open your browser and go to:
+    ```
+    http://127.0.0.1:8000/
+    ```
 
 #### About the project:
 Project uses genetic algorithm to satisfy the constraints related to Timetable scheduling. The program satisfies the following constraints:-
